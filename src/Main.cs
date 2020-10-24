@@ -8,7 +8,7 @@ public class ModSettings : MelonMod
 {
     public override void OnLevelWasInitialized(int level)
     {
-        if (level != 2) return;
+        if (level != 3) return;
         var prefs = MelonPrefs.GetPreferences();
 
         foreach (var category in prefs)
