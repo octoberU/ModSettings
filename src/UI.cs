@@ -111,7 +111,7 @@ public static class UI
                     if (rangesInt.Equals(default(MinMaxStepDefaultInt))) break;
                     var intSlider = modMenuOM.AddSlider(buttonIndex % 2,
                         AddWhitespace(pref.Key),
-                        "D",
+                        null,
                         new Action<float>((amount) =>
                         {
                             int currentVal = MelonPrefs.GetInt(category.Key, pref.Key);
@@ -125,9 +125,9 @@ public static class UI
                             }
                         }),
                         new Func<float>(() => { return (float)MelonPrefs.GetInt(category.Key, pref.Key); }),
-                        null,
+                        new Action(() => { MelonPrefs.SetFloat(category.Key, pref.Key, rangesInt.prefDefault); }),
                         RemoveTags(pref.Value.DisplayText),
-                        new Func<float, string>((amount) => { return amount.ToString("D"); }));
+                        new Func<float, string>((amount) => { return amount.ToString(); }));
                     buttonIndex++;
                     row.Add(intSlider.gameObject);
                     break;
@@ -150,6 +150,8 @@ public static class UI
                 case MelonPrefs.MelonPreferenceType.FLOAT:
                     MinMaxStepDefault rangesFloat = ParseMinMaxStep(pref.Value.DisplayText);
                     if (rangesFloat.Equals(default(MinMaxStepDefault))) break;
+                    var customSpecifier = GetFormatSpecifier(pref.Value.DisplayText);
+                    if (customSpecifier == "") customSpecifier = "N2"; //Default to N2 if specifier is missing
                     var floatSlider = modMenuOM.AddSlider(buttonIndex % 2,
                         AddWhitespace(pref.Key),
                         "N2",
@@ -170,9 +172,24 @@ public static class UI
                         new Func<float>(() => { return MelonPrefs.GetFloat(category.Key, pref.Key); }),
                         new Action(() => { MelonPrefs.SetFloat(category.Key, pref.Key, rangesFloat.prefDefault); }),
                         RemoveTags(pref.Value.DisplayText),
-                        new Func<float, string>((amount) => { return amount.ToString("N3"); }));
+                        new Func<float, string>((amount) => { return amount.ToString(customSpecifier); }));
                     row.Add(floatSlider.gameObject);
                     buttonIndex++;
+                    break;
+
+                case MelonPrefs.MelonPreferenceType.STRING:
+                    
+                    if (pref.Value.DisplayText.ToLower().Contains("[header]"))
+                    {
+                        if(row.Count == 1)
+                        {
+                            modMenuOM.scrollable.AddRow(row[0]);
+                            row.Clear();
+                        }
+                        var header = modMenuOM.AddHeader(0, RemoveTags(pref.Value.DisplayText));
+                        modMenuOM.scrollable.AddRow(header);
+                        buttonIndex = 0;
+                    }
                     break;
 
                 default:
@@ -187,11 +204,16 @@ public static class UI
                 modMenuOM.scrollable.AddRow(tempRow);
                 row.Clear();
             }
-            else if (buttonIndex == category.Value.Count && buttonIndex % 2 == 1)
+            else if (buttonIndex == category.Value.Count && buttonIndex % 2 == 1) // This might be obsolete
             {
                 modMenuOM.scrollable.AddRow(row[0]);
                 row.Clear();
             }
+        }
+        if (row.Count == 1) //If the last row is missing a pair, add a row with a single object.
+        {
+            modMenuOM.scrollable.AddRow(row[0]);
+            row.Clear();
         }
     }
 
@@ -217,8 +239,6 @@ public static class UI
         modMenuOM.scrollable.mRows.Clear();
         modMenuOM.scrollable.mIndex = 0;
         modMenuOM.scrollable.destroyChildren = true;
-
-
     }
 
     [HarmonyPatch(typeof(MenuState), "SetState", new Type[] { typeof(MenuState.State) })]
@@ -309,12 +329,21 @@ public static class UI
 
     public static string RemoveTags(string input)
     {
-        Regex rx = new Regex(@"\[[^\[]*\]");
+        Regex rx = new Regex(@"[\[{][^\[]*[\]}]");
         return rx.Replace(input, "");
     }
 
     public static string AddWhitespace(string input)
     {
         return string.Join(" ", Regex.Split(input, @"(?<!^)(?=[A-Z](?![A-Z]|$))"));
+    }
+
+    public static string GetFormatSpecifier(string input)
+    {
+        if (input.Contains("{") && input.Contains("}"))
+        {
+            return input.Split(new char[] { '{', '}' })[1];
+        }
+        else return "";
     }
 }
