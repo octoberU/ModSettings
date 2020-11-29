@@ -17,9 +17,9 @@ public static class UI
     static OptionsMenu modMenuOM;
     static GunButton backButton;
     static ShellScrollable scroller;
-
     static GunButton modSettingsButton;
     static TextMeshPro modSettingsButtonLabel;
+    static DisplayState displayState = DisplayState.Categories;
 
     public static void Initialize()
     {
@@ -32,7 +32,11 @@ public static class UI
             scroller = modMenuOM.gameObject.GetComponent<ShellScrollable>();
             backButton = modMenu.transform.Find("page/backParent/back/Button").GetComponent<GunButton>();
             backButton.onHitEvent = new UnityEvent();
-            backButton.onHitEvent.AddListener(new Action(() => { HideModSettingsMenu(); }));
+            backButton.onHitEvent.AddListener(new Action(() => 
+            {
+                if (displayState == DisplayState.Prefs) PreparePage();
+                else HideModSettingsMenu(); 
+            }));
         }
     }
 
@@ -43,7 +47,10 @@ public static class UI
         GameObject.Destroy(modSettingsButtonLabel.gameObject.GetComponent<Localizer>());
         modSettingsButtonLabel.text = "Mod Settings";
         modSettingsButton.onHitEvent = new UnityEvent();
-        modSettingsButton.onHitEvent.AddListener(new Action(() => { OpenModSettingsMenu(); }));
+        modSettingsButton.onHitEvent.AddListener(new Action(() => 
+        {
+            OpenModSettingsMenu(); 
+        }));
     }
 
     private static void OpenModSettingsMenu()
@@ -60,6 +67,7 @@ public static class UI
         WipeScroller();
         modMenuOM.screenTitle.text = "Mod Settings";
         AddCategories();
+        displayState = DisplayState.Categories;
     }
 
     private static void AddCategories()
@@ -86,17 +94,18 @@ public static class UI
                 modMenuOM.scrollable.AddRow(tempRow);
                 row.Clear();
             }
-            else if (buttonIndex == prefs.Count && buttonIndex % 2 == 1)
-            {
-                modMenuOM.scrollable.AddRow(row[0]);
-                row.Clear();
-            }
+        }
+        if (row.Count == 1) //If the last row is missing a pair, add a row with a single object.
+        {
+            modMenuOM.scrollable.AddRow(row[0]);
+            row.Clear();
         }
     }
 
     private static void CreateCategoryPage(KeyValuePair<string, Dictionary<string, MelonPrefs.MelonPreference>> category)
     {
         WipeScroller();
+        displayState = DisplayState.Prefs;
         var categoryHeader = modMenuOM.AddHeader(0, category.Key);
         modMenuOM.scrollable.AddRow(categoryHeader);
 
@@ -209,11 +218,6 @@ public static class UI
                 modMenuOM.scrollable.AddRow(row[0]);
                 row.Clear();
             }
-        }
-        if (row.Count == 1) //If the last row is missing a pair, add a row with a single object.
-        {
-            modMenuOM.scrollable.AddRow(row[0]);
-            row.Clear();
         }
     }
 
@@ -345,5 +349,11 @@ public static class UI
             return input.Split(new char[] { '{', '}' })[1];
         }
         else return "";
+    }
+
+    enum DisplayState
+    {
+        Categories,
+        Prefs,
     }
 }
