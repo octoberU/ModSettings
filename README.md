@@ -2,6 +2,8 @@
 
 This mod lets players change mod settings from within the game.
 
+![Banner](https://i.imgur.com/JVbzWPv.png "Banner")
+
 ## To modders
 For a quick start you can use [this config](https://github.com/octoberU/ScoreOverlay/blob/master/Config.cs) as an example.
 
