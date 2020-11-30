@@ -4,6 +4,12 @@ This mod lets players change mod settings from within the game.
 
 ![Banner](https://i.imgur.com/JVbzWPv.png "Banner")
 
+## Installation
+* Download the latest MelonLoader version from [here](https://github.com/HerpDerpinstine/MelonLoader/releases/latest)
+* Grab the latest mod release from [here](https://github.com/octoberU/ModSettings/releases/latest)
+* Place the dll file into `Audica/Mods`
+* Use the **Mod Settings** button from main menu.
+
 ## To modders
 For a quick start you can use [this config](https://github.com/octoberU/ScoreOverlay/blob/master/Config.cs) as an example.
 
