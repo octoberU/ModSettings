@@ -58,7 +58,6 @@ public static class UI
         MenuState.I.mainPage.SetPageActive(false, false);
         modMenuSP.SetPageActive(true, true);
         MelonCoroutines.Start(WaitForPageOpen(PreparePage));
-
     }
 
     private static void PreparePage()
@@ -132,7 +131,6 @@ public static class UI
                             {
                                 MelonPrefs.SetInt(category.Key, pref.Key, newVal);
                             }
-                            MelonPrefs.SaveConfig();
                         }),
                         new Func<float>(() => { return (float)MelonPrefs.GetInt(category.Key, pref.Key); }),
                         new Action(() => { MelonPrefs.SetFloat(category.Key, pref.Key, rangesInt.prefDefault); }),
@@ -149,7 +147,6 @@ public static class UI
                         {
                             bool currentVal = MelonPrefs.GetBool(category.Key, pref.Key);
                             MelonPrefs.SetBool(category.Key, pref.Key, !currentVal);
-                            MelonPrefs.SaveConfig();
                         }),
                         new Func<bool>(() => { return MelonPrefs.GetBool(category.Key, pref.Key); }),
                         pref.Value.DisplayText);
@@ -177,7 +174,6 @@ public static class UI
                             {
                                 MelonPrefs.SetFloat(category.Key, pref.Key, currentVal + increment);
                             }
-                            MelonPrefs.SaveConfig();
                         }),
                         new Func<float>(() => { return MelonPrefs.GetFloat(category.Key, pref.Key); }),
                         new Action(() => { MelonPrefs.SetFloat(category.Key, pref.Key, rangesFloat.prefDefault); }),
@@ -226,6 +222,7 @@ public static class UI
     {
         MenuState.I.mainPage.SetPageActive(true, false);
         modMenuSP.SetPageActive(false, false);
+        MelonPrefs.SaveConfig();
     }
 
     public static void WipeScroller()
