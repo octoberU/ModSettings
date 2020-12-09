@@ -1,12 +1,14 @@
 using MelonLoader;
+using System.Reflection;
 
-
+[assembly: AssemblyVersion(ModSettings.VERSION)]
+[assembly: AssemblyFileVersion(ModSettings.VERSION)]
 [assembly: MelonGame("Harmonix Music Systems, Inc.", "Audica")]
-[assembly: MelonInfo(typeof(ModSettings), "Mod Settings", "0.1.3", "octo", "https://github.com/octoberU/ModSettings")]
+[assembly: MelonInfo(typeof(ModSettings), "Mod Settings", ModSettings.VERSION, "octo", "https://github.com/octoberU/ModSettings")]
 
 public class ModSettings : MelonMod
 {
-    //This only exists for my assembly to have a harmony instance.
+    public const string VERSION = "0.1.3";
 }
 
 
