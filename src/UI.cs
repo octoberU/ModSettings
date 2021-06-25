@@ -221,6 +221,15 @@ public static class UI
         MenuState.I.mainPage.SetPageActive(true, false);
         modMenuSP.SetPageActive(false, false);
         MelonPreferences.Save();
+        ApplyMelonPrefs();
+    }
+
+    private static void ApplyMelonPrefs()
+    {
+        foreach (MelonMod mod in MelonHandler.Mods)
+        {
+            mod.OnModSettingsApplied();
+        }
     }
 
     public static void WipeScroller()

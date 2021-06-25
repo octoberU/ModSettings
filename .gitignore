@@ -8,3 +8,9 @@ obj/Release/
 bin/Debug/
 
 bin/Release/ModSettings.dll
+
+*.user
+
+*.sln
+
+.vs/
