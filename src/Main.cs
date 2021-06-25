@@ -8,7 +8,7 @@ using System.Reflection;
 
 public class ModSettings : MelonMod
 {
-    public const string VERSION = "0.1.4";
+    public const string VERSION = "0.1.5";
 }
 
 
