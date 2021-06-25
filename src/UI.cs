@@ -56,7 +56,7 @@ public static class UI
     private static void OpenModSettingsMenu()
     {
         MenuState.I.mainPage.SetPageActive(false, false);
-        modMenuSP.SetPageActive(true, true);
+        modMenuSP.SetPageActive(false, true);
         MelonCoroutines.Start(WaitForPageOpen(PreparePage));
     }
 
@@ -256,9 +256,10 @@ public static class UI
 
     static IEnumerator WaitForPageOpen(Action callback)
     {
-        yield return new WaitForSeconds(0.1f);
-        callback.Invoke();
-        yield return null;
+		while (modMenuOM.transform.childCount < 5) {
+			yield return null;
+	    }
+	    callback.Invoke();
     }
 
     public static MinMaxStepDefault ParseMinMaxStep(string input)
