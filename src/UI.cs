@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using MelonLoader;
 using System;
 using TMPro;
@@ -71,14 +71,14 @@ public static class UI
 
     private static void AddCategories()
     {
-        var prefs = MelonPrefs.GetPreferences();
+        var prefs = MelonPreferences.Categories;
 
         int buttonIndex = 0;
         Il2CppGeneric.List<GameObject> row = new Il2CppGeneric.List<GameObject>();
         foreach (var category in prefs)
         {
             var categoryButton = modMenuOM.AddButton(buttonIndex % 2,
-                AddWhitespace(category.Key),
+                AddWhitespace(category.DisplayName),
                 new Action(() => { CreateCategoryPage(category); }),
                 null,
                 "");
@@ -101,103 +101,100 @@ public static class UI
         }
     }
 
-    private static void CreateCategoryPage(KeyValuePair<string, Dictionary<string, MelonPrefs.MelonPreference>> category)
+    private static void CreateCategoryPage(MelonPreferences_Category category)
     {
         WipeScroller();
         displayState = DisplayState.Prefs;
-        var categoryHeader = modMenuOM.AddHeader(0, category.Key);
+        var categoryHeader = modMenuOM.AddHeader(0, category.DisplayName);
         modMenuOM.scrollable.AddRow(categoryHeader);
 
         int buttonIndex = 0;
         Il2CppGeneric.List<GameObject> row = new Il2CppGeneric.List<GameObject>();
-        foreach (var pref in category.Value)
+        foreach (var pref in category.Entries)
         {
-            switch (pref.Value.Type)
+            switch (pref.BoxedValue)
             {
-                case MelonPrefs.MelonPreferenceType.INT:
-                    MinMaxStepDefaultInt rangesInt = ParseMinMaxStepInt(pref.Value.DisplayText);
+                case int value:
+                    MinMaxStepDefaultInt rangesInt = ParseMinMaxStepInt(pref.DisplayName);
                     if (rangesInt.Equals(default(MinMaxStepDefaultInt))) break;
                     var intSlider = modMenuOM.AddSlider(buttonIndex % 2,
-                        AddWhitespace(pref.Key),
+                        AddWhitespace(pref.Identifier),
                         null,
                         new Action<float>((amount) =>
                         {
-                            int currentVal = MelonPrefs.GetInt(category.Key, pref.Key);
+                            int currentVal = MelonPreferences.GetEntryValue<int>(pref.Category.Identifier, pref.Identifier);
                             int increment = (int)amount * rangesInt.step;
                             int newVal = currentVal + increment;
-                            if (newVal > rangesInt.max) MelonPrefs.SetInt(category.Key, pref.Key, rangesInt.max);
-                            else if (newVal < rangesInt.min) MelonPrefs.SetInt(category.Key, pref.Key, rangesInt.min);
+                            if (newVal > rangesInt.max) MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, rangesInt.max);
+                            else if(newVal < rangesInt.min) MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, rangesInt.min);
                             else
                             {
-                                MelonPrefs.SetInt(category.Key, pref.Key, newVal);
+                                MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, newVal);
                             }
                         }),
-                        new Func<float>(() => { return (float)MelonPrefs.GetInt(category.Key, pref.Key); }),
-                        new Action(() => { MelonPrefs.SetFloat(category.Key, pref.Key, rangesInt.prefDefault); }),
-                        RemoveTags(pref.Value.DisplayText),
+                        new Func<float>(() => { return MelonPreferences.GetEntryValue<int>(pref.Category.Identifier, pref.Identifier); }),
+                        new Action(() => { MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, rangesInt.prefDefault); }),
+                        RemoveTags(pref.DisplayName),
                         new Func<float, string>((amount) => { return amount.ToString(); }));
                     buttonIndex++;
                     row.Add(intSlider.gameObject);
                     break;
-
-                case MelonPrefs.MelonPreferenceType.BOOL:
+                
+                case bool value:
                     var checkbox = modMenuOM.AddButton(buttonIndex % 2,
-                        AddWhitespace(pref.Key),
+                        AddWhitespace(pref.Identifier),
                         new Action(() =>
                         {
-                            bool currentVal = MelonPrefs.GetBool(category.Key, pref.Key);
-                            MelonPrefs.SetBool(category.Key, pref.Key, !currentVal);
+                            bool currentVal = MelonPreferences.GetEntryValue<bool>(pref.Category.Identifier, pref.Identifier);
+                            MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, !currentVal);
                         }),
-                        new Func<bool>(() => { return MelonPrefs.GetBool(category.Key, pref.Key); }),
-                        pref.Value.DisplayText);
+                        new Func<bool>(() => { return MelonPreferences.GetEntryValue<bool>(pref.Category.Identifier, pref.Identifier); }),
+                        pref.DisplayName);
 
                     row.Add(checkbox.gameObject);
                     buttonIndex++;
                     break;
 
-                case MelonPrefs.MelonPreferenceType.FLOAT:
-                    MinMaxStepDefault rangesFloat = ParseMinMaxStep(pref.Value.DisplayText);
+                case float value:
+                    MinMaxStepDefault rangesFloat = ParseMinMaxStep(pref.DisplayName);
                     if (rangesFloat.Equals(default(MinMaxStepDefault))) break;
-                    var customSpecifier = GetFormatSpecifier(pref.Value.DisplayText);
+                    var customSpecifier = GetFormatSpecifier(pref.DisplayName);
                     if (customSpecifier == "") customSpecifier = "N2"; //Default to N2 if specifier is missing
                     var floatSlider = modMenuOM.AddSlider(buttonIndex % 2,
-                        AddWhitespace(pref.Key),
+                        AddWhitespace(pref.Identifier),
                         "N2",
                         new Action<float>((amount) =>
                         {
-                            float currentVal = MelonPrefs.GetFloat(category.Key, pref.Key);
+                            float currentVal = MelonPreferences.GetEntryValue<float>(pref.Category.Identifier, pref.Identifier);
                             float increment = rangesFloat.step * amount; //(amount * Mathf.Floor(currentVal * 10f));
                             float newVal = currentVal + increment;
-                            if (newVal > rangesFloat.max) MelonPrefs.SetFloat(category.Key, pref.Key, rangesFloat.max);
-                            else if (newVal < rangesFloat.min) MelonPrefs.SetFloat(category.Key, pref.Key, rangesFloat.min);
+                            if (newVal > rangesFloat.max) MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, rangesFloat.max);
+                            else if (newVal < rangesFloat.min) MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, rangesFloat.min);
                             else
                             {
-                                MelonPrefs.SetFloat(category.Key, pref.Key, currentVal + increment);
+                                MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, currentVal + increment);
                             }
                         }),
-                        new Func<float>(() => { return MelonPrefs.GetFloat(category.Key, pref.Key); }),
-                        new Action(() => { MelonPrefs.SetFloat(category.Key, pref.Key, rangesFloat.prefDefault); }),
-                        RemoveTags(pref.Value.DisplayText),
+                        new Func<float>(() => { return MelonPreferences.GetEntryValue<float>(pref.Category.Identifier, pref.Identifier); }),
+                        new Action(() => { MelonPreferences.SetEntryValue(pref.Category.Identifier, pref.Identifier, rangesFloat.prefDefault); }),
+                        RemoveTags(pref.DisplayName),
                         new Func<float, string>((amount) => { return amount.ToString(customSpecifier); }));
                     row.Add(floatSlider.gameObject);
                     buttonIndex++;
                     break;
-
-                case MelonPrefs.MelonPreferenceType.STRING:
-                    
-                    if (pref.Value.DisplayText.ToLower().Contains("[header]"))
+                case string value:
+                    if (pref.DisplayName.ToLower().Contains("[header]"))
                     {
                         if(row.Count == 1)
                         {
                             modMenuOM.scrollable.AddRow(row[0]);
                             row.Clear();
                         }
-                        var header = modMenuOM.AddHeader(0, RemoveTags(pref.Value.DisplayText));
+                        var header = modMenuOM.AddHeader(0, RemoveTags(pref.DisplayName));
                         modMenuOM.scrollable.AddRow(header);
                         buttonIndex = 0;
                     }
                     break;
-
                 default:
                     break;
             }
@@ -210,11 +207,12 @@ public static class UI
                 modMenuOM.scrollable.AddRow(tempRow);
                 row.Clear();
             }
-            else if (buttonIndex == category.Value.Count && buttonIndex % 2 == 1) // This might be obsolete
+            else if (buttonIndex == category.Entries.Count && buttonIndex % 2 == 1) // This might be obsolete
             {
                 modMenuOM.scrollable.AddRow(row[0]);
                 row.Clear();
             }
+            
         }
     }
 
@@ -222,7 +220,7 @@ public static class UI
     {
         MenuState.I.mainPage.SetPageActive(true, false);
         modMenuSP.SetPageActive(false, false);
-        MelonPrefs.SaveConfig();
+        MelonPreferences.Save();
     }
 
     public static void WipeScroller()
@@ -265,6 +263,7 @@ public static class UI
 
     public static MinMaxStepDefault ParseMinMaxStep(string input)
     {
+        if (input is null) return default;
         if (input.Contains("[") && input.Contains("]"))
         {
             float min;
@@ -283,6 +282,7 @@ public static class UI
 
     public static MinMaxStepDefaultInt ParseMinMaxStepInt(string input)
     {
+        if (input is null) return default;
         if (input.Contains("[") && input.Contains("]"))
         {
             int min;
@@ -331,17 +331,20 @@ public static class UI
 
     public static string RemoveTags(string input)
     {
+        if (input is null) return "";
         Regex rx = new Regex(@"[\[{][^\[]*[\]}]");
         return rx.Replace(input, "");
     }
 
     public static string AddWhitespace(string input)
     {
+        if (input is null) return "";
         return string.Join(" ", Regex.Split(input, @"(?<!^)(?=[A-Z](?![A-Z]|$))"));
     }
 
     public static string GetFormatSpecifier(string input)
     {
+        if (input is null) return "";
         if (input.Contains("{") && input.Contains("}"))
         {
             return input.Split(new char[] { '{', '}' })[1];
