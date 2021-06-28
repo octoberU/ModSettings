@@ -109,6 +109,7 @@ public static class UI
         modMenuOM.scrollable.AddRow(categoryHeader);
 
         int buttonIndex = 0;
+        int totalIndex = 0;
         Il2CppGeneric.List<GameObject> row = new Il2CppGeneric.List<GameObject>();
         foreach (var pref in category.Entries)
         {
@@ -198,6 +199,7 @@ public static class UI
                 default:
                     break;
             }
+            totalIndex++;
             if (row.Count == 2)
             {
                 //This is the dumbest code I've ever wrote.
@@ -207,12 +209,12 @@ public static class UI
                 modMenuOM.scrollable.AddRow(tempRow);
                 row.Clear();
             }
-            else if (buttonIndex == category.Entries.Count && buttonIndex % 2 == 1) // This might be obsolete
+            //else if (buttonIndex == category.Entries.Count && buttonIndex % 2 == 1) // This might be obsolete
+            else if (totalIndex == category.Entries.Count)
             {
                 modMenuOM.scrollable.AddRow(row[0]);
                 row.Clear();
             }
-            
         }
     }
 
